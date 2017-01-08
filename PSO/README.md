@@ -6,5 +6,6 @@ A visualization tool for 2 dimensional Particle swarm optimization (PSO). Curren
 
 + Make labels for sliders
 
-<img src="Screenshot1.png" align="center" width="400" >
-
+<p align="center">
+<img src="Screenshot1.png" width="400" >
+</p>
