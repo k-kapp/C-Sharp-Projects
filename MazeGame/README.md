@@ -5,4 +5,7 @@ I wrote the algorithm myself, and as can be seen below, the current mazes it gen
 <img src="Screenshot1.png" width="385" align="left">     <img src="Screenshot2.png" width="385" align="right">
 
 
+<img src="Screenshot3.png" width="385" align="left">     <img src="Screenshot4.png" width="385" align="right">
+
+
 
