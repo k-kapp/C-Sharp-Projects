@@ -19,4 +19,6 @@ A Sokoban clone. The user must push all boxes onto the dots. This version that I
 
 + Create main menu
 
-+ Create puzzle editor
++ Finish puzzle editor. Add functionality for:
+ - adding the starting point
+ - specifying the grid size
