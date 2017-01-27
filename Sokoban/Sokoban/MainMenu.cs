@@ -8,138 +8,70 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-
-/*
- * The code for the main menu, still to be completed (have not added any of this to the
- * main project yet, i.e., there is no main menu that the player will see at the present moment)
- */
-
 namespace Sokoban
 {
-
-    public class ButtonEventArgs : EventArgs
+    class MainMenu : StateBase
     {
+        Menu _menu;
+        Texture2D _cursor;
 
-    }
+        PopupDialog popup;
 
-    class Button
-    {
-        public delegate void ButtonClickCallback(object caller, ButtonEventArgs args);
-
-        string _text;
-        int _x, _y, _width, _height;
-        ButtonClickCallback _callback;
-
-        Vector2 _stringPos;
-
-        SpriteFont _font;
-
-        Game1 _gameObj;
-
-        Rectangle _buttonRect;
-
-        int _textHeight, _textWidth;
-
-        float _scale;
-
-        public Button(string text, int x, int y, int width, int height, Game1 gameObj)
+        public override void Update(GameTime gameTime)
         {
-            _x = x;
-            _y = y;
-            _width = width;
-            _height = height;
+            _menu.Update(gameTime);
+            if (popup != null)
+                popup.Update(gameTime);
 
-            _gameObj = gameObj;
-
-            _text = text;
-
-            Initialize();
+            base.Update(gameTime);
         }
 
-        public Button(string text, int x, int y, int width, int height, ButtonClickCallback callback, Game1 gameObj)
+        public override void Draw(GameTime gameTime)
         {
-            _x = x;
-            _y = y;
-            _width = width;
-            _height = height;
-            _callback = callback;
+            _menu.Draw(gameTime);
+            if (popup != null)
+                popup.Draw(gameTime);
 
-            _gameObj = gameObj;
-
-            _text = text;
-
-
-            Initialize();
+            base.Draw(gameTime);
         }
 
-        protected void Initialize()
+        protected override void ImportTextures()
         {
-            _stringPos = new Vector2(_x, _y);
-            _font = _gameObj.Content.Load<SpriteFont>("Courier New");
-            _textHeight = _font.LineSpacing;
-            _textWidth = (int)_font.MeasureString(_text).X;
-
-            _buttonRect.X = _x;
-            _buttonRect.Y = _y;
-            _buttonRect.Width = _width;
-            _buttonRect.Height = _height;
-
-            float currRatio = (float)_textHeight / _textWidth;
-            float ratio = (float)_height / _width;
-
-            Console.WriteLine("currRatio: " + currRatio.ToString() + ", desired ratio: " + ratio.ToString());
-            Console.WriteLine("Line spacing before change: " + _font.LineSpacing.ToString());
-
-            if (currRatio != ratio)
-            {
-                //_font.LineSpacing = (int)(ratio * _textWidth);
-            }
-
-            Console.WriteLine("Line spacing after change: " + _font.LineSpacing.ToString());
+            _cursor = _gameMgr.Content.Load<Texture2D>("Crate");
         }
 
-        public virtual void OnClick()
+        public void MakePopup(object sender, EventArgs args)
         {
-            ButtonEventArgs args = new ButtonEventArgs();
-            _callback(this, args);
+            popup = new Sokoban.PopupDialog("Press any key to continue", "popup", true, this);
+
+
+            _gameMgr.centerFormX(popup);
+            _gameMgr.centerFormY(popup);
         }
 
-        public virtual void Draw()
+        public MainMenu(int x, int y, int width, int height, string heading, bool resume, GameMgr gameMgr) : base(gameMgr)
         {
-            Console.WriteLine("Font size: " + _font.LineSpacing);
-            _gameObj.SpriteBatch.DrawString(_font, _text, _stringPos, Color.White, 0, new Vector2(0, 0), 1.5f, 0, 0);
-        }
-    }
+            _menu = new Sokoban.Menu(this, "Sokoban", 10, 10, width, height);
+            _menu.ButtonsYOffset = 10;
+            _menu.ButtonsYSpacing = 10;
+            _menu.SetButtonSizes(100, 50);
 
-    public class MainMenu
-    {
-        SpriteBatch _spriteBatch;
-        Texture2D _texture;
-        Game1 _gameObj;
-        Button _myButton;
+            int screenWidth = _gameMgr.GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int screenHeight = _gameMgr.GraphicsDevice.PresentationParameters.BackBufferHeight;
 
-        public void VoidFunction(object caller, ButtonEventArgs args)
-        {
-            
-        }
 
-        public MainMenu(Game1 gameObj)
-        {
-            _gameObj = gameObj;
-            _myButton = new Button("Button1", 10, 10, 10, 10, VoidFunction, gameObj);
-            _texture = _gameObj.Content.Load<Texture2D>("BlackBox");
+            _menu.SetXY((screenWidth - width) / 2, 10);
+
+            _menu.AddButton("Play", _gameMgr.NewGameCallback, _menu);
+            _menu.AddButton("Design", _gameMgr.GotoDesigner, _menu);
+            _menu.AddButton("Exit", _gameMgr.ExitCallback, _menu);
+
+            _menu.CenterAll();
+
+            _gameMgr.centerMenuXY(_menu);
+
+            ImportTextures();
         }
 
-        public void Draw()
-        {
-            int x = _gameObj.GraphicsDevice.PresentationParameters.BackBufferWidth;
-            int y = _gameObj.GraphicsDevice.PresentationParameters.BackBufferHeight;
-
-            Rectangle rect = new Rectangle(0, 0, x, y);
-            _gameObj.SpriteBatch.Draw(_texture, rect, Color.White);
-
-            _myButton.Draw();
-
-        }
     }
 }

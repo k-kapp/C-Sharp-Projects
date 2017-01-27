@@ -8,8 +8,10 @@ namespace Sokoban
         [STAThread]
         static void Main()
         {
-            using (var game = new Game1())
+            using (var game = new GameMgr(1024, 768))
+            {
                 game.Run();
+            }
         }
     }
 #endif
