@@ -21,4 +21,4 @@ A Sokoban clone. The user must push all boxes onto the dots. This version that I
  - adding the starting point
  - specifying the grid size
 
-+ Add a way to select which puzzle to play
++ Add a means to select which puzzle to play
