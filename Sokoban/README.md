@@ -35,4 +35,6 @@ A custom API was written to facilitate the creation of a GUI for the game. This 
 
 + Add functionality for active puzzles to stay active even after game was exited
 
++ Find new color scheme (this ugly yellow won't do!)
+
 + Cleanup code (make naming more consistent, relocate certain functions/methods to more sensible locations, etc.)
