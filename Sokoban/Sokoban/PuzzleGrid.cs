@@ -8,6 +8,10 @@ using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
 namespace Sokoban
 {
     public enum Occpr
@@ -101,12 +105,32 @@ namespace Sokoban
         private Tile [,] _origArr;
         int _numRows, _numCols;
         int _numTargets;
+        int _tileSize = 30;
         Tuple<int, int> _currPos;
         Dir _currDir = Dir.RIGHT;
 
+        Texture2D _crate;
+        Texture2D _empty;
+        Texture2D _wall;
+        Texture2D _void;
+        Texture2D _target;
+        Texture2D _manShoulder;
+        Texture2D _manHead;
+
+        GameMgr _gameMgr;
+
         string _lastImportedGridFilepath;
 
-        public PuzzleGrid(int numRows, int numCols)
+        public string Filepath;
+
+        public PuzzleGrid(GameMgr gameMgr)
+        {
+            _gameMgr = gameMgr;
+
+            ImportTextures();
+        }
+
+        public PuzzleGrid(int numRows, int numCols, GameMgr gameMgr)  : this(gameMgr)
         {
             _tiles = new Tile[numRows, numCols];
         }
@@ -133,21 +157,97 @@ namespace Sokoban
         }
 
 
-        public PuzzleGrid(int targetNum = 0)
+        public PuzzleGrid(int targetNum, GameMgr gameMgr)  : this(gameMgr)
         {
-            Tiles = DeSerialize(_getGridFilepath(targetNum));
+            Filepath = _getGridFilepath(targetNum);
+            Tiles = DeSerialize(Filepath);
             _createBackup(Tiles);
             _initVars();
         }
 
-        public PuzzleGrid(string inputFile, FileFormat format)
+        public PuzzleGrid(string inputFile, FileFormat format, GameMgr gameMgr) : this(gameMgr)
         {
+            if (format == FileFormat.DAT)
+                Filepath = inputFile;
+
             if (format == FileFormat.TXT)
                 _importStringFile(inputFile);
             else if (format == FileFormat.DAT)
                 Tiles = DeSerialize(inputFile);
             _createBackup(Tiles);
             _initVars();
+        }
+
+        public int TileSize
+        {
+            set
+            {
+                _tileSize = value;
+            }
+
+            get
+            {
+                return _tileSize;
+            }
+        }
+
+        public void DrawTile(int row, int column, Tile tile)
+        {
+            Texture2D texture = null;
+            Rectangle destRect;
+            destRect.Width = destRect.Height = _tileSize;
+            destRect.X = column * _tileSize;
+            destRect.Y = row * _tileSize;
+            Color col = Color.White;
+            switch (tile.State)
+            {
+                case (Occpr.VOID):
+                    texture = _void;
+                    break;
+                case (Occpr.CRATE):
+                    if (tile.Target)
+                        col = Color.Brown;
+                    texture = _crate;
+                    break;
+                case (Occpr.EMPTY):
+                    if (tile.Target)
+                    {
+                        texture = _target;
+                    }
+                    else
+                        texture = _empty;
+                    break;
+                case (Occpr.HUMAN):
+                    texture = _empty;
+                    break;
+                case (Occpr.WALL):
+                    texture = _wall;
+                    break;
+
+            }
+            _gameMgr.DrawSprite(texture, destRect, col);
+        }
+
+        public void DrawGrid()
+        {
+            for (int i = 0; i < NumRows(); i++)
+            {
+                for (int j = 0; j < NumCols(); j++)
+                {
+                    DrawTile(i, j, Tiles[i, j]);
+                }
+            }
+        }
+
+        protected void ImportTextures()
+        {
+            _crate = _gameMgr.Content.Load<Texture2D>("Crate");
+            _empty = _gameMgr.Content.Load<Texture2D>("Empty");
+            _wall = _gameMgr.Content.Load<Texture2D>("BrickWall");
+            _void = _gameMgr.Content.Load<Texture2D>("BlackBox");
+            _target = _gameMgr.Content.Load<Texture2D>("Target");
+            _manShoulder = _gameMgr.Content.Load<Texture2D>("Shoulders");
+            _manHead = _void;
         }
 
         public Tile this[int row, int col]
@@ -303,7 +403,7 @@ namespace Sokoban
             return Convert.ToInt32(Path.GetFileNameWithoutExtension(filename).Substring("Puzzle".Length));
         }
 
-        public static string[] getPuzzleFilenames(string targetDir)
+        public static List<string> getPuzzleFilenames(string targetDir)
         {
             string currDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             string[] allDirs = Directory.GetDirectories(currDir);
@@ -315,13 +415,26 @@ namespace Sokoban
         
             var dirObj = Directory.CreateDirectory(targetDir);
 
-            return Directory.GetFiles(targetDir);
+            List<string> returnList = new List<string>();
+
+            string[] fileList = Directory.GetFiles(targetDir);
+
+            foreach(var filename in fileList)
+            {
+                string ext = Path.GetExtension(filename);
+                if (ext == ".dat")
+                {
+                    returnList.Add(filename);
+                }
+            }
+
+            return returnList;
 
         }
 
         public void Serialize()
         {
-            string[] allFiles = getPuzzleFilenames(_targetDir);
+            List<string> allFiles = getPuzzleFilenames(_targetDir);
 
             int highest = 0;
 
@@ -374,7 +487,7 @@ namespace Sokoban
         {
             List<Tile[,]> returnList = new List<Tile[,]>();
 
-            string[] filepaths = getPuzzleFilenames(targetDir);
+            List<string> filepaths = getPuzzleFilenames(targetDir);
 
             foreach(var filename in filepaths)
             {

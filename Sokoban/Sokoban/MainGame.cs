@@ -48,6 +48,7 @@ namespace Sokoban
         int _armDelay;
         bool _collided = false;
 
+        int currMapNum = 0;
 
         KeyState _up;
         KeyState _right;
@@ -77,8 +78,15 @@ namespace Sokoban
         private void _initialize()
         {
 
+            if (_gameMgr.PuzzlePaths.Count == 0)
+            {
+                _gameMgr.MainMenuCallback(null, null);
+                return;
+            }
+
             //_grid = new PuzzleGrid("test1.txt");
-            _grid = new PuzzleGrid();
+            _grid = new PuzzleGrid(_gameMgr.PuzzlePaths[currMapNum], FileFormat.DAT, _gameMgr);
+            _grid.TileSize = _tileSize;
             //_currLevelFilename = _grid.GridFilepath;
 
             //_grid.Serialize();
@@ -107,70 +115,70 @@ namespace Sokoban
             _manHead = _void;
         }
 
+        private void _mapDone()
+        {
+            currMapNum++;
+
+            if (currMapNum >= _gameMgr.PuzzlePaths.Count)
+            {
+                _gameMgr.MainMenuCallback(null, null);
+                return;
+            }
+
+            _grid = new PuzzleGrid(_gameMgr.PuzzlePaths[currMapNum], FileFormat.DAT, _gameMgr);
+            _grid.TileSize = _tileSize;
+            //_currLevelFilename = _grid.GridFilepath;
+
+            //_grid.Serialize();
+
+            _up.PrevDown = false;
+            _right.PrevDown = false;
+            _down.PrevDown = false;
+            _left.PrevDown = false;
+        }
+
+        private void _drawTile(int row, int column, Tile tile)
+        {
+            Texture2D texture = null;
+            Rectangle destRect;
+            destRect.Width = destRect.Height = _tileSize;
+            destRect.X = column * _tileSize;
+            destRect.Y = row * _tileSize;
+            Color col = Color.White;
+            switch (tile.State)
+            {
+                case (Occpr.VOID):
+                    texture = _void;
+                    break;
+                case (Occpr.CRATE):
+                    if (tile.Target)
+                        col = Color.Brown;
+                    texture = _crate;
+                    break;
+                case (Occpr.EMPTY):
+                    if (tile.Target)
+                    {
+                        texture = _target;
+                    }
+                    else
+                        texture = _empty;
+                    break;
+                case (Occpr.HUMAN):
+                    texture = _empty;
+                    break;
+                case (Occpr.WALL):
+                    texture = _wall;
+                    break;
+
+            }
+            _gameMgr.DrawSprite(texture, destRect, col);
+        }
+
         public override void Draw(GameTime gameTime)
         {
-            int numCols = _grid.NumCols();
-            int numRows = _grid.NumRows();
 
-
-            for (int i = 0; i < numRows; i++)
-            {
-                for (int j = 0; j < numCols; j++)
-                {
-                    Texture2D texture = null;
-                    Rectangle destRect;
-                    destRect.Width = destRect.Height = _tileSize;
-                    destRect.X = j * _tileSize;
-                    destRect.Y = i * _tileSize;
-                    Color col = Color.White;
-                    switch (_grid[i, j].State)
-                    {
-                        case (Occpr.VOID):
-                            texture = _void;
-                            break;
-                        case (Occpr.CRATE):
-                            if (_grid[i, j].Target)
-                                col = Color.Brown;
-                            texture = _crate;
-                            break;
-                        case (Occpr.EMPTY):
-                            if (_grid[i, j].Target)
-                            {
-                                texture = _target;
-                            }
-                            else
-                                texture = _empty;
-                            break;
-                        case (Occpr.HUMAN): 
-                            if (((long)gameTime.TotalGameTime.TotalMilliseconds - _lastMoveTime) < _armDelay)
-                            {
-                                if (_collided)
-                                    drawMan(true, true);
-                                else
-                                    drawMan(_leftLast, !_leftLast);
-                            }
-                            else
-                                drawMan(false, false);
-                            break;
-                        case (Occpr.WALL):
-                            texture = _wall;
-                            break;
-
-                    }
-                    if (_grid[i, j].State != Occpr.HUMAN)
-                    {
-                        _gameMgr.DrawSprite(texture, destRect, col);
-                    }
-                }
-            }
-
-            /*
-            foreach(var form in forms)
-            {
-                form.Draw(gameTime);
-            }
-            */
-            //_menu.Draw();
+            _grid.DrawGrid();
+            drawMan(gameTime);
 
             if (forms.Count > 0)
                 forms[forms.Count - 1].Draw(gameTime);
@@ -214,7 +222,7 @@ namespace Sokoban
 
         public void ExitConfirmDialog(object sender, EventArgs args)
         {
-            PopupDialog popup = new Sokoban.PopupDialog("Are you sure that you want to quit? (progress on this level will be lost)",
+            PopupDialog popup = PopupDialog.MakePopupDialog("Are you sure that you want to quit? (progress on this level will be lost)",
                                                             "Quit?", true, this);
             popup.AddButton(new Button("Quit", 0, 0, 0, 0, ExitToMainMenu, popup));
             popup.AddButton(new Button("Cancel", 0, 0, 0, 0, PopForm, popup));
@@ -320,15 +328,8 @@ namespace Sokoban
 
             if (_grid.NumTargets() == 0)
             {
-                _exit();
+                _mapDone();
             }
-
-            /*
-            foreach(var form in forms)
-            {
-                form.Update(gameTime);
-            }
-            */
 
 
         }
@@ -434,6 +435,63 @@ namespace Sokoban
 
         }
 
+        public static Texture2D drawManStill(GameMgr gameMgr, RenderTarget2D currRenderTarget, RenderTarget2D renderTarget, bool up)
+        {
+
+            int tileSize = renderTarget.Width;
+            int manHeadSize = (int)(renderTarget.Width * (24.0/60.0));
+            int manWidth = (int)(renderTarget.Width * (5.0/6.0));
+            int manShoulderWidth = (int)(renderTarget.Width * (1.0/3.0));
+
+            Texture2D background = gameMgr.Content.Load<Texture2D>("Empty");
+            Texture2D manShoulder = gameMgr.Content.Load<Texture2D>("Shoulders");
+            Texture2D manHead = gameMgr.Content.Load<Texture2D>("BlackBox");
+
+            int tileY = 0;
+            int tileX = 0;
+
+
+            int addShoulderWidth = tileSize / 2 - manShoulderWidth / 2;
+            int addManWidth = tileSize / 2 - manWidth / 2;
+
+            int shoulderX, shoulderY;
+
+            int lenX, lenY;
+            if (!up)
+            {
+                shoulderX = addShoulderWidth;
+                shoulderY = addManWidth;
+                lenX = manShoulderWidth;
+                lenY = manWidth;
+            }
+            else
+            {
+                shoulderX = addManWidth;
+                shoulderY = addShoulderWidth;
+                lenX = manWidth;
+                lenY = manShoulderWidth;
+            }
+
+            int headX = tileX + tileSize / 2 - manHeadSize / 2;
+            int headY = tileY + tileSize / 2 - manHeadSize / 2;
+
+            Rectangle shoulderRect = new Rectangle(shoulderX, shoulderY, lenX, lenY);
+
+            gameMgr.SetRenderTarget(renderTarget);
+
+            gameMgr.SpriteBatch.Begin();
+
+            gameMgr.DrawSprite(background, new Rectangle(0, 0, renderTarget.Width, renderTarget.Height), Color.White);
+            gameMgr.DrawSprite(manShoulder, shoulderRect, Color.White);
+            gameMgr.DrawSprite(manHead, new Rectangle(headX, headY, manHeadSize, manHeadSize), Color.White);
+
+            gameMgr.SpriteBatch.End();
+
+            gameMgr.SetRenderTarget(currRenderTarget);
+
+            return renderTarget;
+        }
+
         private void drawManStill()
         {
             System.Tuple<int, int> pos = _grid.CurrPos();
@@ -466,9 +524,22 @@ namespace Sokoban
 
             Rectangle shoulderRect = new Rectangle(shoulderX, shoulderY, lenX, lenY);
 
-            _gameMgr.DrawSprite(_empty, new Rectangle(tileX, tileY, _tileSize, _tileSize), Color.White);
             _gameMgr.DrawSprite(_manShoulder, shoulderRect, Color.White);
             _gameMgr.DrawSprite(_manHead, new Rectangle(headX, headY, _manHeadSize, _manHeadSize), Color.White);
+
+        }
+
+        public void drawMan(GameTime gameTime)
+        {
+            if (((long)gameTime.TotalGameTime.TotalMilliseconds - _lastMoveTime) < _armDelay)
+            {
+                if (_collided)
+                    drawMan(true, true);
+                else
+                    drawMan(_leftLast, !_leftLast);
+            }
+            else
+                drawMan(false, false);
 
         }
 

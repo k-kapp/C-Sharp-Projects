@@ -16,7 +16,7 @@ namespace Sokoban
     }
 
     
-    public class Button
+    public class Button : Clickable
     {
         public delegate void ButtonClickCallback(object caller, ButtonEventArgs args);
 
@@ -37,10 +37,8 @@ namespace Sokoban
 
         SpriteFont _font;
 
-        XNAForm _parent;
-        GameMgr _gameMgr;
 
-        Rectangle _buttonRect;
+        //Rectangle _mainRect;
 
         int _textHeight, _textWidth;
 
@@ -50,17 +48,11 @@ namespace Sokoban
 
         public bool MouseButtonReleaseEvent = true;
 
-        public Button(string text, int x, int y, int width, int height, XNAForm parent)
+        public Button(string text, int x, int y, int width, int height, XNAForm parent) : base(x, y, width, height, true, parent)
         {
-            _parent = parent;
             _gameMgr = _parent.GameMgr;
 
             _text = text;
-
-            _buttonRect.X = x;
-            _buttonRect.Y = y;
-            _buttonRect.Width = width;
-            _buttonRect.Height = height;
 
             Initialize();
         }
@@ -89,13 +81,13 @@ namespace Sokoban
         {
             set
             {
-                _buttonRect.X = value;
+                _mainRect.X = value;
                 updateStringPos();
             }
 
             get
             {
-                return _buttonRect.X;
+                return _mainRect.X;
             }
         }
 
@@ -103,13 +95,13 @@ namespace Sokoban
         {
             set
             {
-                _buttonRect.Y = value;
+                _mainRect.Y = value;
                 updateStringPos();
             }
 
             get
             {
-                return _buttonRect.Y;
+                return _mainRect.Y;
             }
         }
 
@@ -117,13 +109,13 @@ namespace Sokoban
         {
             set
             {
-                _buttonRect.Width = value;
+                _mainRect.Width = value;
                 updateStringPos();
             }
 
             get
             {
-                return _buttonRect.Width;
+                return _mainRect.Width;
             }
         }
 
@@ -131,24 +123,24 @@ namespace Sokoban
         {
             set
             {
-                _buttonRect.Height = value;
+                _mainRect.Height = value;
                 updateStringPos();
             }
 
             get
             {
-                return _buttonRect.Height;
+                return _mainRect.Height;
             }
         }
 
         public bool StringFitsX()
         {
-            return !(_textWidth >= _buttonRect.Width);
+            return !(_textWidth >= _mainRect.Width);
         }
 
         public bool StringFitsY()
         {
-            return !(_textHeight >= _buttonRect.Height);
+            return !(_textHeight >= _mainRect.Height);
         }
 
         public void AutoSize(double xScale = 1.3, double yScale = 1.1)
@@ -171,7 +163,7 @@ namespace Sokoban
         {
             _textHeight = (int)(_font.MeasureString(_text).Y*_scale);
             _textWidth = (int)(_font.MeasureString(_text).X*_scale);
-            _stringPos = new Vector2(_buttonRect.X + (_buttonRect.Width - _textWidth)/2 + _horizOffset, _buttonRect.Y + (_buttonRect.Height - _textHeight)/2 + _vertOffset);
+            _stringPos = new Vector2(_mainRect.X + (_mainRect.Width - _textWidth)/2 + _horizOffset, _mainRect.Y + (_mainRect.Height - _textHeight)/2 + _vertOffset);
         }
 
         protected void Initialize()
@@ -189,8 +181,8 @@ namespace Sokoban
             _textWidth = (int)(_font.MeasureString(_text).X*_scale);
 
 
-            Console.WriteLine("Button X pos: " + _buttonRect.X.ToString());
-            Console.WriteLine("Button Y pos: " + _buttonRect.Y.ToString());
+            Console.WriteLine("Button X pos: " + _mainRect.X.ToString());
+            Console.WriteLine("Button Y pos: " + _mainRect.Y.ToString());
 
             updateStringPos();
 
@@ -198,7 +190,7 @@ namespace Sokoban
             Console.WriteLine("textheight: " + _textHeight.ToString());
         }
 
-        public virtual void OnClick()
+        public override void OnClick()
         {
             //Console.WriteLine("Button clicked");
 
@@ -210,9 +202,9 @@ namespace Sokoban
             EventCalls(this, args);
         }
 
-        public virtual void Draw()
+        public override void Draw()
         {
-            _gameMgr.DrawSprite(_background, _buttonRect, _drawCol);
+            _gameMgr.DrawSprite(_background, _mainRect, _drawCol);
             _gameMgr.SpriteBatch.DrawString(_font, _text, _stringPos, _stringCol, 0, new Vector2(0, 0), _scale, 0, 0);
         }
 
@@ -229,19 +221,46 @@ namespace Sokoban
             }
         }
 
+        public override void Update()
+        {
+            base.Update();
+
+            if (MouseOnClickable())
+            {
+                _drawCol = _activeCol;
+            }
+            else
+            {
+                _drawCol = _inactiveCol;
+            }
+        }
+
+        /*
         public virtual void Update()
         {
             MouseState mstate = Mouse.GetState();
             Point mPos = mstate.Position;
 
-            mPos.X = mPos.X - _parent.X;
-            mPos.Y = mPos.Y - _parent.Y;
 
-            if ((mPos.X > _buttonRect.X) && (mPos.X < _buttonRect.X + _buttonRect.Width)
-                    && (mPos.Y > _buttonRect.Y) && (mPos.Y < _buttonRect.Y + _buttonRect.Height))
+            mPos.X = mPos.X - _parent.InnerXAbs;
+            mPos.Y = mPos.Y - _parent.InnerYAbs;
+
+            if (false)
+            {
+                Console.WriteLine("Button text: " + _text);
+                Console.WriteLine("Mouse position: " + mPos.X);
+                Console.WriteLine(mPos.Y);
+                Console.WriteLine("Parent XAbs: " + _parent.XAbs);
+                Console.WriteLine("Parent YAbs: " + _parent.YAbs);
+                Console.WriteLine("Parent InnerXAbs: " + _parent.InnerXAbs);
+                Console.WriteLine("Parent InnerYAbs: " + _parent.InnerYAbs);
+            }
+
+            if ((mPos.X > _mainRect.X) && (mPos.X < _mainRect.X + _mainRect.Width)
+                    && (mPos.Y > _mainRect.Y) && (mPos.Y < _mainRect.Y + _mainRect.Height))
             {
                 _drawCol = _activeCol;
-                //Console.WriteLine("Making Color red");
+                //Console.WriteLine("Making Color red. Text of button: " + _text);
                 if (MouseButtonReleaseEvent)
                 {
                     if (_buttonHeld && mstate.LeftButton == ButtonState.Released)
@@ -270,6 +289,9 @@ namespace Sokoban
             {
                 _buttonHeld = false;
             }
+
+            //_drawCol = Color.White;
         }
+        */
     }
 }

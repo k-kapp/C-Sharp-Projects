@@ -21,6 +21,8 @@ namespace Sokoban
 
         public FormMgr(GameMgr gameMgr)
         {
+            renderTarget = null;
+
             _gameMgr = gameMgr;
 
             forms = new List<XNAForm>();
@@ -63,7 +65,7 @@ namespace Sokoban
             }
         }
 
-        public RenderTarget2D RenderTarget
+        public virtual RenderTarget2D RenderTarget
         {
             get
             {

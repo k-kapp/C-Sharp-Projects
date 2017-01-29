@@ -15,6 +15,8 @@ namespace Sokoban
         string _message;
         SpriteFont _font;
 
+        XNALabel _messageLabel;
+
         int _textX;
         int _textY;
         int _textWidth;
@@ -35,7 +37,24 @@ namespace Sokoban
 
         int _zorder;
 
-        public PopupDialog(string message, string title, bool buttonsAutoSize, StateBase stateMgr) : base(0, 0, 0, 0, stateMgr,  title, true)
+        public static PopupDialog MakePopupDialog(string message, string title, bool buttonsAutoSize, StateBase stateMgr)
+        {
+            int buttonsWidth = 100;
+            int buttonsHeight = 50;
+            int buttonsXSpacing = 20;
+
+            SpriteFont font = stateMgr.GameMgr.Content.Load<SpriteFont>("Courier New");
+            int titleWidth = (int)(font.MeasureString(title).X);
+            int textHeight = (int)font.MeasureString(message).Y;
+            int textWidth = (int)font.MeasureString(message).X;
+
+            int width = (int)(textWidth * 1.1);
+            int height = StandardTitleBarHeight + 30 + textHeight + 30 + buttonsHeight + 30;
+
+            return new Sokoban.PopupDialog(message, 0, 0, width, height, title, buttonsAutoSize, stateMgr);
+        }
+
+        public PopupDialog(string message, int x, int y, int width, int height, string title, bool buttonsAutoSize, StateBase stateMgr) : base(x, y, width, height, stateMgr,  title, true)
         {
             _message = message;
 
@@ -44,25 +63,34 @@ namespace Sokoban
 
         private void _initialize()
         {
+
+            _buttons = new List<Button>();
+
             _buttonsWidth = 100;
             _buttonsHeight = 50;
             _buttonsXSpacing = 20;
 
-            _buttons = new List<Button>();
-
             _font = _gameMgr.Content.Load<SpriteFont>("Courier New");
-            _textY = 20 + 50;
+
             _titleWidth = (int)(_font.MeasureString(_title).X);
             _textHeight = (int)_font.MeasureString(_message).Y;
             _textWidth = (int)_font.MeasureString(_message).X;
+            _textY = 20;
+            /*
             Width = _textWidth;
             Width += (int)(0.1 * Width);
             Height = _titleBarHeight + _textHeight + 30 + _buttonsHeight + 30;
+            */
 
+
+
+            _messageLabel = new Sokoban.XNALabel(_message, _font, new Vector2(0, _textY), 1.0f, this);
 
             _centerTextX();
             _centerButtonsY();
             _initButtons();
+
+            AddLabel(_messageLabel);
         }
 
         public bool DisableOthers
@@ -184,7 +212,8 @@ namespace Sokoban
 
         private void _centerTextX()
         {
-            _textX = (Width - _textWidth) / 2;
+            int textX = (Width - _textWidth) / 2;
+            _messageLabel.Pos = new Vector2(textX, _messageLabel.Pos.Y);
         }
 
         private void _updateWindowSize()
@@ -204,12 +233,12 @@ namespace Sokoban
 
         private void _centerButtonsX()
         {
-            _buttonsXStart = (Width - _buttonsTotalWidth) / 2;
+            _buttonsXStart = (InnerWidth - _buttonsTotalWidth) / 2;
         }
 
         private void _centerButtonsY()
         {
-            _buttonsYStart = (Height - _titleBarHeight - 30 - _textHeight - _buttonsHeight) / 2 + 30 + _textHeight + _titleBarHeight;
+            _buttonsYStart = (InnerHeight - 30 - _textHeight - _buttonsHeight) / 2 + 30 + _textHeight;
         }
 
         private void _initButtons()
@@ -246,30 +275,38 @@ namespace Sokoban
             }
         }
 
+        /*
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            _updateButtons();
+            //_updateButtons();
         }
+        */
 
         public override void Draw(GameTime gameTime)
         {
+            Console.WriteLine("Main inner rect: " + _mainInnerRect.ToString());
+            Console.WriteLine("Main outer rect: " + _mainOuterRect.ToString());
+
             base.Draw(gameTime);
 
+
+            /*
             _gameMgr.SpriteBatch.End();
             _gameMgr.SpriteBatch.Begin();
 
-            _gameMgr.SetRenderTarget(renderTarget);
+            _gameMgr.SetRenderTarget(renderTargetInner);
 
             _gameMgr.DrawString(_font, _message, new Vector2(_textX, _textY), Color.Black, 1.0f);
             _drawButtons();
-
             _gameMgr.SpriteBatch.End();
+
             _gameMgr.SetRenderTarget(null);
 
             _gameMgr.SpriteBatch.Begin();
-            _gameMgr.DrawSprite(renderTarget, _mainOuterRect, Color.White);
+            _gameMgr.DrawSprite(renderTarget, _mainRect, Color.White);
+            */
         }
     }
 }

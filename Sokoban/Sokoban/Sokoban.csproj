@@ -39,6 +39,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Button.cs" />
+    <Compile Include="ButtonTest.cs" />
+    <Compile Include="Clickable.cs" />
     <Compile Include="FormMgr.cs" />
     <Compile Include="GameMgr.cs" />
     <Compile Include="LevelDesigner.cs" />
@@ -49,10 +51,14 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PuzzleGrid.cs" />
-    <Compile Include="Scroller.cs" />
-    <Compile Include="ScrollForm.cs" />
+    <Compile Include="PuzzleList.cs" />
+    <Compile Include="PuzzleListElement.cs" />
+    <Compile Include="PuzzleSelector.cs" />
+    <Compile Include="ScrollBar.cs" />
+    <Compile Include="XNAList.cs" />
     <Compile Include="StateBase.cs" />
     <Compile Include="XNAForm.cs" />
+    <Compile Include="XNAListElement.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
@@ -73,6 +79,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Puzzles\Puzzle1.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Puzzles\Puzzle2.dat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Puzzles\Puzzle3.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

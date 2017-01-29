@@ -29,7 +29,7 @@ namespace Sokoban
 
         public LevelDesigner(int rows, int cols, GameMgr gameMgr) : base(gameMgr)
         {
-            _grid = new Sokoban.PuzzleGrid(rows, cols);
+            _grid = new Sokoban.PuzzleGrid(rows, cols, _gameMgr);
 
             _rows = rows;
             _cols = cols;
@@ -82,6 +82,9 @@ namespace Sokoban
                 case (3):
                     _cursorPaint = new Tile(true, Occpr.EMPTY);
                     break;
+                case (4):
+                    _cursorPaint = new Tile(false, Occpr.HUMAN);
+                    break;
             }
         }
 
@@ -97,7 +100,7 @@ namespace Sokoban
                 if (PuzzleGrid.TilesEqual(tileArr, _grid.Tiles))
                 {
                     Console.WriteLine("Making error dialog...");
-                    PopupDialog dialog = new PopupDialog("Cannot save puzzle: Already exists", "Error", true, this);
+                    PopupDialog dialog = PopupDialog.MakePopupDialog("Cannot save puzzle: Already exists", "Error", true, this);
                     Button.ButtonClickCallback callbackFunc = (senderArg, eventArgs) => _gameMgr.DestroyForm(dialog, senderArg, eventArgs);
                     dialog.AddButton(0, 0, _saveButtonsSizeX, _saveButtonsSizeY, callbackFunc, "OK");
                     _gameMgr.centerFormX(dialog);
@@ -115,7 +118,7 @@ namespace Sokoban
             Console.WriteLine("Making success dialog....");
 
 
-            PopupDialog savedDialog = new PopupDialog("Puzzle successfully saved", "Success", true, this);
+            PopupDialog savedDialog = PopupDialog.MakePopupDialog("Puzzle successfully saved", "Success", true, this);
             Button.ButtonClickCallback callback = (a, b) => GameMgr.DestroyForm(savedDialog, a, b);
             savedDialog.AddButton(0, 0, _saveButtonsSizeX, _saveButtonsSizeY, callback, "Continue designing");
             savedDialog.AddButton(0, 0, _saveButtonsSizeX, _saveButtonsSizeY, _gameMgr.MainMenuCallback, "Exit to main menu");
@@ -139,7 +142,7 @@ namespace Sokoban
             textureList.Add("Empty");
             textureList.Add("Crate");
             textureList.Add("Target");
-            _toolbar = new XNAForm(0, 0, _toolbarButtonSize * textureList.Count, _toolbarButtonSize, _designForm, "m", false);
+            _toolbar = new XNAForm(0, 0, _toolbarButtonSize * (textureList.Count + 1), _toolbarButtonSize, _designForm, "m", false);
             _addToolbarButtons(textureList);
 
             _designForm.AddForm(_toolbar);
@@ -155,6 +158,15 @@ namespace Sokoban
                 newButton.newInactiveColor(Color.White);
                 _toolbar.AddButton(newButton);
             }
+
+            RenderTarget2D manRenderTarget = new RenderTarget2D(_gameMgr.GraphicsDevice, _gridTileSize, _gridTileSize);
+            Texture2D manTexture = MainGame.drawManStill(_gameMgr, null, manRenderTarget, false);
+
+            Button newButtonMan = new Button("", textures.Count * _toolbarButtonSize, 0, _toolbarButtonSize, _toolbarButtonSize, ToolbarButtonClicked, _toolbar);
+            newButtonMan.newBackground(manTexture);
+            newButtonMan.newActiveColor(Color.Gray);
+            newButtonMan.newInactiveColor(Color.White);
+            _toolbar.AddButton(newButtonMan);
         }
 
         private void _makeDesignGrid()

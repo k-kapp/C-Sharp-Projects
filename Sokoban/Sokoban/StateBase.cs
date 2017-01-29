@@ -23,7 +23,6 @@ namespace Sokoban
         public virtual void Draw(GameTime gameTime)
         {
             base.Draw(gameTime);
-
             Utilities.DrawCursor(_gameMgr);
         }
         

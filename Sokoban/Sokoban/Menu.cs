@@ -20,6 +20,8 @@ namespace Sokoban
         Texture2D _texture, _cursor, _background;
         Button _myButton;
 
+        XNALabel _titleLabel;
+
         SpriteFont _titleFont;
         string _menuHeading;
 
@@ -33,7 +35,7 @@ namespace Sokoban
 
         MouseState _mstate;
 
-        List<Button> _buttons;
+        //List<Button> _buttons;
 
         int _buttonsWidth, _buttonsHeight;
         int _buttonsX;
@@ -66,18 +68,29 @@ namespace Sokoban
         {
             _menuHeading = menuHeading;
             _buttons = new List<Button>();
+            _labels = new List<XNALabel>();
+
 
             _titleFont = _gameMgr.Content.Load<SpriteFont>("Courier New");
 
+
             Vector2 titleSize = _titleFont.MeasureString(_menuHeading);
 
-            _titleRect = new Rectangle((int)(_mainRect.X + (width - titleSize.X) / 2), _mainRect.Y + _titleOffset, (int)titleSize.X, (int)titleSize.Y);
+            _titleRect = new Rectangle((int)(_mainOuterRect.X + (width - titleSize.X) / 2), _mainOuterRect.Y + _titleOffset, (int)titleSize.X, (int)titleSize.Y);
 
             ImportTextures();
 
-            _buttonsYStart = _mainRect.Y + _titleOffset + _titleRect.Height;
+            _buttonsYStart = _mainOuterRect.Y + _titleOffset + _titleRect.Height;
 
             num = 10;
+
+            if (this == null)
+            {
+                Console.WriteLine("THIS IS NULL IN CTOR");
+            }
+
+            _titleLabel = new XNALabel(menuHeading, _titleFont, new Vector2(0, _titleOffset), 1.5f, this);
+            AddLabel(_titleLabel);
         }
 
         private Button _insertButtonNoCallback(string buttonStr, int index, XNAForm parent)
@@ -156,7 +169,7 @@ namespace Sokoban
 
         public void CenterButtonsX()
         {
-            _buttonsX = _mainRect.X + (_mainRect.Width - _buttonsWidth) / 2;
+            _buttonsX = (_mainInnerRect.Width - _buttonsWidth) / 2;
 
             foreach(var button in _buttons)
             {
@@ -166,7 +179,7 @@ namespace Sokoban
 
         public void CenterButtonsY()
         {
-            int availableSpace = _mainRect.Height - _titleOffset - (int)(_titleFont.MeasureString(_menuHeading).Y * _scale);
+            int availableSpace = _mainInnerRect.Height - _titleOffset - (int)(_titleFont.MeasureString(_menuHeading).Y * _scale);
             int totalButtonSpace = _buttonsHeight * _buttons.Count + _buttonsYSpacing * (_buttons.Count - 1);
 
             _buttonsYOffset = (availableSpace - totalButtonSpace) / 2;
@@ -174,7 +187,7 @@ namespace Sokoban
 
         public void SetButtonsY()
         {
-            int currY = _mainRect.Y + _titleOffset + (int)(_titleFont.MeasureString(_menuHeading).Y*_scale) + _buttonsYOffset;
+            int currY = _mainOuterRect.Y + _titleOffset + (int)(_titleFont.MeasureString(_menuHeading).Y*_scale) + _buttonsYOffset;
 
             foreach(var button in _buttons)
             {
@@ -186,7 +199,8 @@ namespace Sokoban
 
         public void CenterTitle()
         {
-            _titleX = _mainRect.X + (_mainRect.Width - (int)(_titleFont.MeasureString(_menuHeading).X*_scale)) / 2;
+            _titleX = _mainInnerRect.X + (_mainInnerRect.Width - (int)(_titleFont.MeasureString(_menuHeading).X*_scale)) / 2;
+            _titleLabel.Pos = new Vector2(_titleX, _titleLabel.Pos.Y);
         }
 
         public void CenterAll()
@@ -198,11 +212,12 @@ namespace Sokoban
 
         }
 
+        /*
         public int X
         {
             set
             {
-                _mainOuterRect.X = value;
+                _mainRect.X = value;
             }
         }
 
@@ -210,9 +225,10 @@ namespace Sokoban
         {
             set
             {
-                _mainOuterRect.Y = value;
+                _mainRect.Y = value;
             }
         }
+        */
 
         public void SetXY(int x, int y)
         {
@@ -225,10 +241,12 @@ namespace Sokoban
         {
             base.Draw(gameTime);
 
-            _gameMgr.SetRenderTarget(renderTarget);
+            //_gameMgr.SetRenderTarget(renderTargetInner);
 
-            //_gameMgr.SpriteBatch.Draw(_background, _mainRect, Color.Yellow);
-            _gameMgr.DrawString(_titleFont, _menuHeading, new Vector2(_titleX, _titleOffset), Color.Black, 1.5f);
+            //_gameMgr.SpriteBatch.Draw(_background, _mainOuterRect, Color.Yellow);
+            //_gameMgr.DrawString(_titleFont, _menuHeading, new Vector2(_titleX, _titleOffset), Color.Black, 1.5f);
+
+            /*
             foreach(var button in _buttons)
             {
                 button.Draw();
@@ -242,7 +260,8 @@ namespace Sokoban
 
             Texture2D temp = renderTarget;
 
-            _gameMgr.DrawSprite(temp, _mainOuterRect, Color.White);
+            _gameMgr.DrawSprite(temp, _mainRect, Color.White);
+            */
         }
 
         public override void Update(GameTime gameTime)

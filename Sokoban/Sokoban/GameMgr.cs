@@ -18,7 +18,7 @@ namespace Sokoban
         public static void DrawCursor(GameMgr gameMgr)
         {
             MouseState mstate = Mouse.GetState();
-            gameMgr.DrawSprite(CursorTexture, new Rectangle(mstate.Position, new Point(10, 10)), Color.White);
+            gameMgr.DrawSprite(CursorTexture, new Rectangle(mstate.Position, new Point(20, 20)), Color.White);
         }
     }
 
@@ -40,6 +40,8 @@ namespace Sokoban
 
         XNAForm _form;
 
+        public List<string> PuzzlePaths;
+
         public GameMgr(int screenWidth, int screenHeight)
         {
 
@@ -48,6 +50,8 @@ namespace Sokoban
 
             ScreenWidth = screenWidth;
             ScreenHeight = screenHeight;
+
+            PuzzlePaths = new List<string>();
         }
 
         public int ScreenWidth
@@ -114,6 +118,12 @@ namespace Sokoban
             _currState = designer;
         }
 
+        public void GotoPuzzleSelector(object caller, ButtonEventArgs args)
+        {
+            PuzzleSelector selector = new PuzzleSelector(this);
+            _currState = selector;
+        }
+
         public void SaveGameState(object caller, ButtonEventArgs args)
         {
             _savedState = _currState;
@@ -122,6 +132,11 @@ namespace Sokoban
         public void MainMenuCallback(object caller, ButtonEventArgs args)
         {
             _currState = _makeMainMenu();
+        }
+
+        public void GotoButtonTest(object caller, ButtonEventArgs args)
+        {
+            _currState = new ButtonTest(this);
         }
 
         public void DestroyForm(XNAForm form, object sender, ButtonEventArgs args)
@@ -208,7 +223,7 @@ namespace Sokoban
             //so that background images do not get wiped when we overlay textures
             GraphicsDevice.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
 
-            Utilities.CursorTexture = Content.Load<Texture2D>("Crate");
+            Utilities.CursorTexture = Content.Load<Texture2D>("StandardCursor");
         }
 
 
